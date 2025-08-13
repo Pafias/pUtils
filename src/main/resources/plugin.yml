@@ -1,0 +1,5 @@
+name: pUtils
+version: ${project.version}
+main: me.pafias.putils.pUtils
+authors: [ Pafias ]
+description: Various utilities
