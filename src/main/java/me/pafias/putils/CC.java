@@ -6,7 +6,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 public class CC {
 
     public static final @NotNull Component EMPTY = Component.empty();
+    public static final @NotNull Component NEW_LINE = Component.newline();
 
     public static String serialize(Component component) {
         if (component == null) return null;
