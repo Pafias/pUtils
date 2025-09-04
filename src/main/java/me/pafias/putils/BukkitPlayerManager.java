@@ -1,61 +1,98 @@
 package me.pafias.putils;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.WeakHashMap;
-import java.util.concurrent.CompletableFuture;
 
 public class BukkitPlayerManager {
 
     private static final Map<UUID, OfflinePlayer> cacheByUuid = new WeakHashMap<>();
     private static final Map<String, OfflinePlayer> cacheByName = new WeakHashMap<>();
 
-    public static OfflinePlayer getOfflinePlayerByName(String name) {
-        if (Bukkit.getPlayer(name) != null) return Bukkit.getPlayer(name);
+    /**
+     * Gets an OfflinePlayer by their name
+     *
+     * @param name The player's Minecraft username.
+     * @return The corresponding OfflinePlayer object, or null if the player could not be found anywhere.
+     */
+    public static @Nullable OfflinePlayer getOfflinePlayerByName(String name) {
+        if (name == null || name.isEmpty()) return null;
+
+        // 1. Check for online player (fastest)
+        Player onlinePlayer = pUtils.getPlugin().getServer().getPlayer(name);
+        if (onlinePlayer != null) return onlinePlayer;
+
+        // 2. Check our name cache
         if (cacheByName.containsKey(name)) return cacheByName.get(name);
 
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(name);
-        cacheByName.put(name, offlinePlayer);
-        return offlinePlayer;
+        // 3. Player not found locally. Fetch APIs
+        MojangPlayer mojangPlayer = MojangUtils.getMojangPlayer(name);
+        if (mojangPlayer != null && mojangPlayer.getUniqueId() != null)
+            // API success.
+            // This also ensures the player is cached correctly for future lookups.
+            return getOfflinePlayerByUUID(mojangPlayer.getUniqueId());
+
+        // 4. All lookups failed.
+        return null;
     }
 
     /**
-     * Getting an offline player by their UUID is tricky, because the Bukkit API only returns a full OfflinePlayer object if the player has logged in before.
-     * If the player has never joined before, the OfflinePlayer object will be incomplete and stuff like the name will be null.
-     * The player's name is pretty crucial for us, so...
-     * In this case, we need to fetch the player's name from Mojang and then get the player from Bukkit by their name.
-     * The getOfflinePlayer method using the name, will have the server fetch the whole player from Mojang and return a valid OfflinePlayer object which we can happily use!
+     * Gets an OfflinePlayer by their UUID
+     *
+     * @param uuid The player's UUID.
+     * @return The corresponding OfflinePlayer object, or null if the UUID could not be resolved by APIs.
      */
-    public static OfflinePlayer getOfflinePlayerByUUID(UUID uuid) {
-        if (Bukkit.getPlayer(uuid) != null) return Bukkit.getPlayer(uuid);
-        if (cacheByUuid.containsKey(uuid)) return cacheByUuid.get(uuid);
+    public @Nullable
+    static OfflinePlayer getOfflinePlayerByUUID(UUID uuid) {
+        if (uuid == null) return null;
 
-        OfflinePlayer cached = Bukkit.getOfflinePlayer(uuid);
-        if (cached.getName() == null) {
-            OfflinePlayer offlinePlayer = cached;
-            MojangPlayer mojangPlayer = MojangUtils.getMojangPlayer(uuid);
-            if (mojangPlayer != null) {
-                offlinePlayer = getOfflinePlayerByName(mojangPlayer.getName());
-                if (offlinePlayer.getUniqueId().equals(mojangPlayer.getUniqueId()))
-                    cacheByUuid.put(uuid, offlinePlayer);
-            }
+        // 1. Check for online player
+        Player onlinePlayer = pUtils.getPlugin().getServer().getPlayer(uuid);
+        if (onlinePlayer != null)
+            return onlinePlayer;
+
+        // 2. Check our UUID cache
+        OfflinePlayer cachedPlayer = cacheByUuid.get(uuid);
+        if (cachedPlayer != null && cachedPlayer.getName() != null)
+            return cachedPlayer;
+
+        // 3. Check the local user cache
+        OfflinePlayer offlinePlayer = pUtils.getPlugin().getServer().getOfflinePlayer(uuid);
+        if (offlinePlayer.hasPlayedBefore() || offlinePlayer.getName() != null) {
+            // Player is known to this server.
+            cache(offlinePlayer);
             return offlinePlayer;
-        } else {
-            cacheByUuid.put(uuid, cached);
-            return cached;
         }
+
+        // 4. All lookups failed.
+        return null;
     }
 
-    public static OfflinePlayer getOfflinePlayerByInput(String input) {
+    /**
+     * Gets an OfflinePlayer from a string input which could be a name or a UUID.
+     *
+     * @param input The player's name or UUID as a string.
+     * @return An OfflinePlayer object if found, otherwise null.
+     */
+    public static @Nullable OfflinePlayer getOfflinePlayerByInput(String input) {
+        if (input == null || input.isEmpty()) return null;
         try {
             UUID uuid = UUID.fromString(input);
             return getOfflinePlayerByUUID(uuid);
         } catch (IllegalArgumentException e) {
             return getOfflinePlayerByName(input);
         }
+    }
+
+    private static void cache(OfflinePlayer player) {
+        if (player == null) return;
+        cacheByUuid.put(player.getUniqueId(), player);
+        if (player.getName() != null)
+            cacheByName.put(player.getName().toLowerCase(), player);
     }
 
 }

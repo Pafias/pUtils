@@ -7,7 +7,8 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -25,7 +26,22 @@ public class CC {
         return LegacyComponentSerializer.legacyAmpersand().serialize(component);
     }
 
-    public static TextComponent a(String s) {
+    public static Component multiLine(Object... s) {
+        Component component = Component.empty();
+        for (int i = 0; i < s.length; i++) {
+            Object ss = s[i];
+            if (ss == null) continue;
+            if (ss instanceof String)
+                component = component.append(a((String) ss));
+            else if (ss instanceof Component)
+                component = component.append((Component) ss);
+            if (i < s.length - 1)
+                component = component.append(NEW_LINE);
+        }
+        return component;
+    }
+
+    public static Component a(String s) {
         if (s == null) return null;
         TextComponent component = Component.empty();
         component = component.decoration(TextDecoration.ITALIC, false);
@@ -33,9 +49,22 @@ public class CC {
         return component;
     }
 
-    public static TextComponent[] a(ArrayList<String> s) {
-        if (s == null) return null;
-        return s.stream().map(CC::a).collect(Collectors.toList()).toArray(new TextComponent[]{});
+    public static List<Component> a(List<String> collection) {
+        return a(ArrayList::new, collection);
+    }
+
+    public static <C extends List<Component>> C a(@NotNull Supplier<C> collectionFactory, List<String> collection) {
+        if (collection == null) return null;
+        return collection.stream().map(CC::a).collect(Collectors.toCollection(collectionFactory));
+    }
+
+    public static Set<Component> a(Set<String> collection) {
+        return a(HashSet::new, collection);
+    }
+
+    public static <C extends Set<Component>> C a(@NotNull Supplier<C> collectionFactory, Set<String> collection) {
+        if (collection == null) return null;
+        return collection.stream().map(CC::a).collect(Collectors.toCollection(collectionFactory));
     }
 
     public static Component a(Object o) {
@@ -56,7 +85,7 @@ public class CC {
             return null;
     }
 
-    public static TextComponent af(String s, Object... o) {
+    public static Component af(String s, Object... o) {
         if (s == null) return null;
         // Silly fix to be able to process Component in String.format.
         // Convert each passed Component to a regular string with '&' color codes and then at the end the a() method converts the whole thing back to one Component.
@@ -68,9 +97,22 @@ public class CC {
         return a(String.format(s, o));
     }
 
-    public static TextComponent[] af(ArrayList<String> s, Object... o) {
+    public static List<Component> af(List<String> s, Object... o) {
+        return af(ArrayList::new, s, o);
+    }
+
+    public static <C extends List<Component>> C af(@NotNull Supplier<C> collectionFactory, List<String> s, Object... o) {
         if (s == null) return null;
-        return s.stream().map(ss -> af(ss, o)).collect(Collectors.toList()).toArray(new TextComponent[]{});
+        return s.stream().map(ss -> af(ss, o)).collect(Collectors.toCollection(collectionFactory));
+    }
+
+    public static Set<Component> af(Set<String> s, Object... o) {
+        return af(HashSet::new, s, o);
+    }
+
+    public static <C extends Set<Component>> C af(@NotNull Supplier<C> collectionFactory, Set<String> s, Object... o) {
+        if (s == null) return null;
+        return s.stream().map(ss -> af(ss, o)).collect(Collectors.toCollection(collectionFactory));
     }
 
     public static Component af(Object s, Object... o) {
@@ -98,16 +140,31 @@ public class CC {
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
-    public static String[] t(ArrayList<String> s) {
-        if (s == null) return null;
-        return s.stream().map(CC::t).collect(Collectors.toList()).toArray(new String[]{});
+    public static List<String> t(List<String> s) {
+        return t(ArrayList::new, s);
     }
 
-    public static String[] t(Object o) {
+    public static <S extends List<String>> S t(Supplier<S> collectionFactory, List<String> s) {
+        if (s == null) return null;
+        return s.stream().map(CC::t).collect(Collectors.toCollection(collectionFactory));
+    }
+
+    public static Set<String> t(Set<String> s) {
+        return t(HashSet::new, s);
+    }
+
+    public static <S extends Set<String>> S t(Supplier<S> collectionFactory, Set<String> s) {
+        if (s == null) return null;
+        return s.stream().map(CC::t).collect(Collectors.toCollection(collectionFactory));
+    }
+
+    public static Collection<String> t(Object o) {
         if (o instanceof String)
-            return new String[]{t((String) o)};
-        else if (o instanceof ArrayList)
-            return t((ArrayList<String>) o);
+            return Collections.singletonList(t((String) o));
+        else if (o instanceof List)
+            return t((List<String>) o);
+        else if (o instanceof Set)
+            return t((Set<String>) o);
         else
             return null;
     }
@@ -117,16 +174,31 @@ public class CC {
         return t(String.format(s, o));
     }
 
-    public static String[] tf(ArrayList<String> s, Object... o) {
-        if (s == null) return null;
-        return s.stream().map(ss -> tf(ss, o)).collect(Collectors.toList()).toArray(new String[]{});
+    public static List<String> tf(List<String> s, Object... o) {
+        return tf(ArrayList::new, s, o);
     }
 
-    public static String[] tf(Object s, Object... o) {
+    public static <S extends List<String>> S tf(Supplier<S> collectionFactory, List<String> s, Object... o) {
+        if (s == null) return null;
+        return s.stream().map(ss -> tf(ss, o)).collect(Collectors.toCollection(collectionFactory));
+    }
+
+    public static Set<String> tf(Set<String> s, Object... o) {
+        return tf(HashSet::new, s, o);
+    }
+
+    public static <S extends Set<String>> S tf(Supplier<S> collectionFactory, Set<String> s, Object... o) {
+        if (s == null) return null;
+        return s.stream().map(ss -> tf(ss, o)).collect(Collectors.toCollection(collectionFactory));
+    }
+
+    public static Collection<String> tf(Object s, Object... o) {
         if (s instanceof String)
-            return new String[]{tf((String) s, o)};
-        else if (s instanceof ArrayList)
-            return tf((ArrayList<String>) s, o);
+            return Collections.singletonList(tf((String) s, o));
+        else if (s instanceof List)
+            return tf((List<String>) s, o);
+        else if (s instanceof Set)
+            return tf((Set<String>) s, o);
         else return null;
     }
 

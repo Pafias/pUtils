@@ -2,9 +2,11 @@ package me.pafias.putils;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
@@ -16,6 +18,7 @@ public class MojangUtils {
     private static final Map<String, MojangPlayer> cacheByName = new WeakHashMap<>();
 
     public static MojangPlayer getMojangPlayerByInput(String input) {
+        if (input == null || input.isEmpty()) return null;
         try {
             UUID uuid = UUID.fromString(input);
             return getMojangPlayer(uuid);
@@ -25,11 +28,12 @@ public class MojangUtils {
     }
 
     public static MojangPlayer getMojangPlayer(UUID uuid) {
+        if (uuid == null) return null;
         if (cacheByUuid.containsKey(uuid))
             return cacheByUuid.get(uuid);
         try {
             MojangPlayer p = getMojangPlayer(uuid, null);
-            if (p.isMojangApiSuccess()) {
+            if (p != null) {
                 cacheByUuid.put(p.getUniqueId(), p);
                 cacheByName.put(p.getName(), p);
             }
@@ -41,11 +45,12 @@ public class MojangUtils {
     }
 
     public static MojangPlayer getMojangPlayer(String name) {
+        if (name == null || name.isEmpty()) return null;
         if (cacheByName.containsKey(name))
             return cacheByName.get(name);
         try {
             MojangPlayer p = getMojangPlayer(null, name);
-            if (p.isMojangApiSuccess()) {
+            if (p != null) {
                 cacheByUuid.put(p.getUniqueId(), p);
                 cacheByName.put(p.getName(), p);
             }
@@ -56,44 +61,53 @@ public class MojangUtils {
         }
     }
 
-    private static MojangPlayer getMojangPlayer(UUID uuid, String name) {
+    private static MojangPlayer getMojangPlayer(@Nullable UUID uuid, @Nullable String name) {
+        if (uuid == null && name == null) return null;
         try { // Try Mojang API
             URL url;
             if (uuid != null)
                 url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.toString());
             else
                 url = new URL("https://api.mojang.com/users/profiles/minecraft/" + name);
-            JsonObject json = new JsonParser().parse(new InputStreamReader(url.openStream())).getAsJsonObject();
-            String uuidWithoutDashes = json.get("id").getAsString();
-            String formattedUuid = String.format(
-                    "%8s-%4s-%4s-%4s-%12s",
-                    uuidWithoutDashes.substring(0, 8),
-                    uuidWithoutDashes.substring(8, 12),
-                    uuidWithoutDashes.substring(12, 16),
-                    uuidWithoutDashes.substring(16, 20),
-                    uuidWithoutDashes.substring(20)
-            );
-            final UUID finalUuid = UUID.fromString(formattedUuid);
-            final String finalName = json.get("name").getAsString();
 
-            return new MojangPlayer(finalUuid, finalName, true);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0");
+            connection.setConnectTimeout(5000); // 5 second timeout
+            connection.setReadTimeout(5000);
+
+            try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                String uuidWithoutDashes = json.get("id").getAsString();
+                String finalName = json.get("name").getAsString();
+                UUID finalUuid = UUID.fromString(uuidWithoutDashes.replaceFirst(
+                        "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})", "$1-$2-$3-$4-$5"
+                ));
+                return new MojangPlayer(finalUuid, finalName);
+            }
+        } catch (FileNotFoundException e) {
+            // Player does not exist
+            return null;
         } catch (Exception e) {
             try { // Try alternative API
                 URL url = new URL(String.format("https://playerdb.co/api/player/minecraft/%s", uuid != null ? uuid.toString() : name));
-                JsonObject json = new JsonParser().parse(new InputStreamReader(url.openStream())).getAsJsonObject();
-                final UUID finalUuid = UUID.fromString(json.get("id").getAsString());
-                final String finalName = json.get("username").getAsString();
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
 
-                return new MojangPlayer(finalUuid, finalName, false);
+                try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+                    JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+                    if (root.get("code").getAsString().equals("player.found")) {
+                        JsonObject playerObject = root.getAsJsonObject("data").getAsJsonObject("player");
+                        UUID finalUuid = UUID.fromString(playerObject.get("id").getAsString());
+                        String finalName = playerObject.get("username").getAsString();
+                        return new MojangPlayer(finalUuid, finalName);
+                    }
+                    return null; // API responded but didn't find the player.
+                }
             } catch (Exception ex) {
-                // If neither works, just get it locally
-                OfflinePlayer player;
-                if (uuid != null)
-                    player = BukkitPlayerManager.getOfflinePlayerByUUID(uuid);
-                else
-                    player = BukkitPlayerManager.getOfflinePlayerByName(name);
-
-                return new MojangPlayer(player.getUniqueId(), player.getName(), false);
+                // Give up if both APIs fail
+                return null;
             }
         }
     }

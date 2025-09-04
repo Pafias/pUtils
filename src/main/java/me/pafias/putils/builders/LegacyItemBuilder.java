@@ -8,10 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LegacyItemBuilder {
 
@@ -23,17 +20,18 @@ public class LegacyItemBuilder {
     private Map<Enchantment, Integer> enchantments;
     private ItemFlag[] itemflags;
 
-    public static ItemBuilder clone(ItemStack itemStack) {
-        ItemBuilder builder = new ItemBuilder(itemStack.getType());
+    public static LegacyItemBuilder clone(ItemStack itemStack) {
+        LegacyItemBuilder builder = new LegacyItemBuilder(itemStack.getType());
         builder.setAmount(itemStack.getAmount());
         builder.setData(itemStack.getDurability());
         ItemMeta meta = itemStack.getItemMeta();
         if (meta.hasDisplayName())
             builder.setName(meta.getDisplayName());
         if (meta.hasLore())
-            builder.setLore(meta.getLore().toArray(new String[0]));
+            builder.setLore(meta.getLore());
         if (meta.hasEnchants())
-            meta.getEnchants().forEach(builder::addEnchant);
+            for (Map.Entry<Enchantment, Integer> entry : meta.getEnchants().entrySet())
+                builder.addEnchant(entry.getKey(), entry.getValue());
         builder.setFlags(meta.getItemFlags().toArray(new ItemFlag[0]));
         return builder;
     }
@@ -72,6 +70,11 @@ public class LegacyItemBuilder {
         return this;
     }
 
+    public LegacyItemBuilder setLore(Collection<String> lore) {
+        this.lore = new ArrayList<>(lore);
+        return this;
+    }
+
     public LegacyItemBuilder setLore(String... lore) {
         this.lore = Arrays.asList(lore);
         return this;
@@ -106,7 +109,8 @@ public class LegacyItemBuilder {
         if (lore != null)
             meta.setLore(lore);
         if (enchantments != null)
-            enchantments.forEach((enchantment, level) -> meta.addEnchant(enchantment, level, true));
+            for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet())
+                meta.addEnchant(entry.getKey(), entry.getValue(), true);
         if (itemflags != null)
             meta.addItemFlags(itemflags);
         is.setItemMeta(meta);

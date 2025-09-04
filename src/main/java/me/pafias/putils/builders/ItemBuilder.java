@@ -6,34 +6,41 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.material.MaterialData;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ItemBuilder {
 
     private final Material material;
+
     private int amount = 1;
+
     private short data = -1;
+    private MaterialData materialData;
+
     private Component name;
+
     private List<Component> lore;
+
     private Map<Enchantment, Integer> enchantments;
-    private ItemFlag[] itemflags;
+
+    private Set<ItemFlag> itemflags;
 
     public static ItemBuilder clone(ItemStack itemStack) {
         ItemBuilder builder = new ItemBuilder(itemStack.getType());
         builder.setAmount(itemStack.getAmount());
         builder.setData(itemStack.getDurability());
+        builder.setData(itemStack.getData());
         ItemMeta meta = itemStack.getItemMeta();
         if (meta.hasDisplayName())
             builder.setName(meta.displayName());
         if (meta.hasLore())
-            builder.setLore(meta.lore().toArray(new Component[0]));
+            builder.setLore(meta.lore());
         if (meta.hasEnchants())
             meta.getEnchants().forEach(builder::addEnchant);
-        builder.setFlags(meta.getItemFlags().toArray(new ItemFlag[0]));
+        builder.setFlags(meta.getItemFlags());
         return builder;
     }
 
@@ -50,6 +57,13 @@ public class ItemBuilder {
         return this;
     }
 
+    @Deprecated
+    public ItemBuilder setData(MaterialData materialData) {
+        this.materialData = materialData;
+        return this;
+    }
+
+    @Deprecated
     public ItemBuilder setData(short data) {
         this.data = data;
         return this;
@@ -60,21 +74,29 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setName(String name) {
-        this.name = Component.text(name);
+    @Deprecated
+    public ItemBuilder setNameLegacy(String name) {
+        return setName(Component.text(name));
+    }
+
+    public ItemBuilder setLore(Collection<Component> lore) {
+        this.lore = new ArrayList<>(lore);
         return this;
     }
 
     public ItemBuilder setLore(Component... lore) {
-        this.lore = Arrays.asList(lore);
+        return setLore(Arrays.asList(lore));
+    }
+
+    @Deprecated
+    public ItemBuilder setLoreLegacy(Collection<String> lore) {
+        this.lore = lore.stream().map(Component::text).collect(Collectors.toList());
         return this;
     }
 
-    public ItemBuilder setLore(String... lore) {
-        this.lore = Arrays.asList(Arrays.stream(lore)
-                .map(Component::text)
-                .toArray(Component[]::new));
-        return this;
+    @Deprecated
+    public ItemBuilder setLoreLegacy(String... lore) {
+        return setLoreLegacy(Arrays.asList(lore));
     }
 
     public ItemBuilder addEnchant(Enchantment enchantment, int level) {
@@ -84,15 +106,19 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setFlags(ItemFlag... flags) {
-        itemflags = flags;
+    public ItemBuilder setFlags(Collection<ItemFlag> itemFlags) {
+        this.itemflags = new HashSet<>(itemFlags);
         return this;
+    }
+
+    public ItemBuilder setFlags(ItemFlag... flags) {
+        return setFlags(Arrays.asList(flags));
     }
 
     public ItemBuilder minimal() {
         setFlags(ItemFlag.values());
-        setName(" ");
-        setLore(" ");
+        setNameLegacy(" ");
+        setLoreLegacy(" ");
         return this;
     }
 
@@ -100,6 +126,8 @@ public class ItemBuilder {
         ItemStack is = new ItemStack(material, amount);
         if (data != -1)
             is.setDurability(data);
+        if (materialData != null)
+            is.setData(materialData);
         ItemMeta meta = is.getItemMeta();
         if (name != null)
             meta.displayName(name);
@@ -108,7 +136,7 @@ public class ItemBuilder {
         if (enchantments != null)
             enchantments.forEach((enchantment, level) -> meta.addEnchant(enchantment, level, true));
         if (itemflags != null)
-            meta.addItemFlags(itemflags);
+            meta.addItemFlags(itemflags.toArray(new ItemFlag[0]));
         is.setItemMeta(meta);
         return is;
     }
