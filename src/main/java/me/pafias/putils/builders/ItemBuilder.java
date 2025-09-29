@@ -17,8 +17,9 @@ public class ItemBuilder {
 
     private int amount = 1;
 
-    private short data = -1;
+    private short legacyData = -1;
     private MaterialData materialData;
+    private int modelData = -1;
 
     private Component name;
 
@@ -31,9 +32,11 @@ public class ItemBuilder {
     public static ItemBuilder clone(ItemStack itemStack) {
         ItemBuilder builder = new ItemBuilder(itemStack.getType());
         builder.setAmount(itemStack.getAmount());
-        builder.setData(itemStack.getDurability());
-        builder.setData(itemStack.getData());
+        builder.setLegacyData(itemStack.getDurability());
+        builder.setMaterialData(itemStack.getData());
         ItemMeta meta = itemStack.getItemMeta();
+        if (meta.hasCustomModelData())
+            builder.setModelData(meta.getCustomModelData());
         if (meta.hasDisplayName())
             builder.setName(meta.displayName());
         if (meta.hasLore())
@@ -58,14 +61,19 @@ public class ItemBuilder {
     }
 
     @Deprecated
-    public ItemBuilder setData(MaterialData materialData) {
+    public ItemBuilder setMaterialData(MaterialData materialData) {
         this.materialData = materialData;
         return this;
     }
 
     @Deprecated
-    public ItemBuilder setData(short data) {
-        this.data = data;
+    public ItemBuilder setLegacyData(short data) {
+        this.legacyData = data;
+        return this;
+    }
+
+    public ItemBuilder setModelData(int modelData) {
+        this.modelData = modelData;
         return this;
     }
 
@@ -124,11 +132,13 @@ public class ItemBuilder {
 
     public ItemStack build() {
         ItemStack is = new ItemStack(material, amount);
-        if (data != -1)
-            is.setDurability(data);
+        if (legacyData != -1)
+            is.setDurability(legacyData);
         if (materialData != null)
             is.setData(materialData);
         ItemMeta meta = is.getItemMeta();
+        if (modelData != -1)
+            meta.setCustomModelData(modelData);
         if (name != null)
             meta.displayName(name);
         if (lore != null)

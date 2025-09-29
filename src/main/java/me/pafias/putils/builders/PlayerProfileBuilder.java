@@ -90,7 +90,7 @@ public class PlayerProfileBuilder {
                 outStream.close();
 
                 try (Reader reader = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)) {
-                    JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+                    JsonObject obj = new JsonParser().parse(reader).getAsJsonObject();
                     if (obj.has("error")) return null;
                     if (!obj.has("data")) return null;
                     JsonObject texture = obj.get("data").getAsJsonObject().get("texture").getAsJsonObject();

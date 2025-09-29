@@ -76,7 +76,7 @@ public class MojangUtils {
             connection.setReadTimeout(5000);
 
             try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
                 String uuidWithoutDashes = json.get("id").getAsString();
                 String finalName = json.get("name").getAsString();
                 UUID finalUuid = UUID.fromString(uuidWithoutDashes.replaceFirst(
@@ -96,7 +96,7 @@ public class MojangUtils {
                 connection.setReadTimeout(5000);
 
                 try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-                    JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+                    JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
                     if (root.get("code").getAsString().equals("player.found")) {
                         JsonObject playerObject = root.getAsJsonObject("data").getAsJsonObject("player");
                         UUID finalUuid = UUID.fromString(playerObject.get("id").getAsString());

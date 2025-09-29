@@ -31,7 +31,11 @@ public class CC {
         for (int i = 0; i < s.length; i++) {
             Object ss = s[i];
             if (ss == null) continue;
-            if (ss instanceof String)
+            if (ss instanceof List)
+                component = component.append(multiLine(((List<?>) ss).toArray()));
+            else if (ss instanceof Set)
+                component = component.append(multiLine(((Set<?>) ss).toArray()));
+            else if (ss instanceof String)
                 component = component.append(a((String) ss));
             else if (ss instanceof Component)
                 component = component.append((Component) ss);
@@ -158,15 +162,15 @@ public class CC {
         return s.stream().map(CC::t).collect(Collectors.toCollection(collectionFactory));
     }
 
-    public static Collection<String> t(Object o) {
+    public static String[] t(Object o) {
         if (o instanceof String)
-            return Collections.singletonList(t((String) o));
+            return new String[]{t((String) o)};
         else if (o instanceof List)
-            return t((List<String>) o);
+            return t((List<String>) o).toArray(new String[0]);
         else if (o instanceof Set)
-            return t((Set<String>) o);
+            return t((Set<String>) o).toArray(new String[0]);
         else
-            return null;
+            return new String[0];
     }
 
     public static String tf(String s, Object... o) {
@@ -192,14 +196,14 @@ public class CC {
         return s.stream().map(ss -> tf(ss, o)).collect(Collectors.toCollection(collectionFactory));
     }
 
-    public static Collection<String> tf(Object s, Object... o) {
+    public static String[] tf(Object s, Object... o) {
         if (s instanceof String)
-            return Collections.singletonList(tf((String) s, o));
+            return new String[]{tf((String) s, o)};
         else if (s instanceof List)
-            return tf((List<String>) s, o);
+            return tf((List<String>) s, o).toArray(new String[0]);
         else if (s instanceof Set)
-            return tf((Set<String>) s, o);
-        else return null;
+            return tf((Set<String>) s, o).toArray(new String[0]);
+        else return new String[0];
     }
 
     public static String strip(String s) {

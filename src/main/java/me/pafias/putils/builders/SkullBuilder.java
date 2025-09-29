@@ -13,17 +13,20 @@ import java.util.concurrent.CompletableFuture;
 
 public class SkullBuilder {
 
-    private final CompletableFuture<OfflinePlayer> owner;
+    private final OfflinePlayer owner;
+    private final String ownerName;
     private int amount = 1;
     private Component name;
     private List<Component> lore;
 
     public SkullBuilder(OfflinePlayer player) {
-        owner = CompletableFuture.completedFuture(player);
+        owner = player;
+        ownerName = player.getName();
     }
 
     public SkullBuilder(String playerName) {
-        owner = CompletableFuture.supplyAsync(() -> BukkitPlayerManager.getOfflinePlayerByName(playerName));
+        ownerName = playerName;
+        owner = null;
     }
 
     public SkullBuilder setAmount(int amount) {
@@ -61,9 +64,15 @@ public class SkullBuilder {
         if (lore != null)
             meta.lore(lore);
         if (owner != null)
-            meta.setOwningPlayer(owner.join());
+            meta.setOwningPlayer(owner);
+        else if (ownerName != null)
+            meta.setOwningPlayer(BukkitPlayerManager.getOfflinePlayerByName(ownerName));
         is.setItemMeta(meta);
         return is;
+    }
+
+    public CompletableFuture<ItemStack> buildAsync() {
+        return CompletableFuture.supplyAsync(this::build);
     }
 
 }

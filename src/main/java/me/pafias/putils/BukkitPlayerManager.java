@@ -48,6 +48,17 @@ public class BukkitPlayerManager {
      */
     public @Nullable
     static OfflinePlayer getOfflinePlayerByUUID(UUID uuid) {
+        return getOfflinePlayerByUUID(uuid, true);
+    }
+
+    /**
+     * Gets an OfflinePlayer by their UUID
+     *
+     * @param uuid       The player's UUID.
+     * @param preferNull If true, will return null for unknown players. If false, will try to return an OfflinePlayer object even if the player is unknown to this server.
+     * @return The corresponding OfflinePlayer object.
+     */
+    public static OfflinePlayer getOfflinePlayerByUUID(UUID uuid, boolean preferNull) {
         if (uuid == null) return null;
 
         // 1. Check for online player
@@ -62,7 +73,7 @@ public class BukkitPlayerManager {
 
         // 3. Check the local user cache
         OfflinePlayer offlinePlayer = pUtils.getPlugin().getServer().getOfflinePlayer(uuid);
-        if (offlinePlayer.hasPlayedBefore() || offlinePlayer.getName() != null) {
+        if (!preferNull || offlinePlayer.hasPlayedBefore() || offlinePlayer.getName() != null) {
             // Player is known to this server.
             cache(offlinePlayer);
             return offlinePlayer;

@@ -63,10 +63,6 @@ public class ShulkerBuilder {
         return this;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public ShulkerBuilder setName(String name) {
         this.name = name;
         return this;
