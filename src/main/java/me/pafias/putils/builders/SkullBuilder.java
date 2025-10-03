@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,12 +20,16 @@ public class SkullBuilder {
     private Component name;
     private List<Component> lore;
 
-    public SkullBuilder(OfflinePlayer player) {
+    public SkullBuilder(@NotNull OfflinePlayer player) {
+        if (player == null)
+            throw new IllegalArgumentException("Player cannot be null");
         owner = player;
         ownerName = player.getName();
     }
 
-    public SkullBuilder(String playerName) {
+    public SkullBuilder(@NotNull String playerName) {
+        if (playerName == null || playerName.isEmpty())
+            throw new IllegalArgumentException("Player name cannot be null or empty");
         ownerName = playerName;
         owner = null;
     }

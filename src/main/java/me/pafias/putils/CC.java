@@ -21,6 +21,12 @@ public class CC {
     public static final @NotNull Component EMPTY = Component.empty();
     public static final @NotNull Component NEW_LINE = Component.newline();
 
+    public static boolean equals(Component c1, Component c2) {
+        if (c1 == null && c2 == null) return true;
+        if (c1 == null || c2 == null) return false;
+        return serialize(c1).equals(serialize(c2));
+    }
+
     public static String serialize(Component component) {
         if (component == null) return null;
         return LegacyComponentSerializer.legacyAmpersand().serialize(component);

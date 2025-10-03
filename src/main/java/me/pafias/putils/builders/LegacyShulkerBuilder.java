@@ -1,8 +1,6 @@
 package me.pafias.putils.builders;
 
 import lombok.Getter;
-import me.pafias.putils.CC;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.Inventory;
@@ -15,35 +13,35 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Getter
-public class ShulkerBuilder {
+public class LegacyShulkerBuilder {
 
     private Material material;
     private int amount = 1;
-    private Component name;
-    private List<Component> lore;
+    private String name;
+    private List<String> lore;
     private ItemFlag[] itemFlags;
     private Consumer<Inventory> inventoryConsumer;
 
-    public ShulkerBuilder() {
+    public LegacyShulkerBuilder() {
         this(Material.SHULKER_BOX);
     }
 
-    public ShulkerBuilder(Material material) {
+    public LegacyShulkerBuilder(Material material) {
         if (!material.name().contains("SHULKER")) throw new IllegalArgumentException("Material must be a shulker box");
         this.material = material;
     }
 
-    public static ShulkerBuilder fromExisting(ItemStack item) {
+    public static LegacyShulkerBuilder fromExisting(ItemStack item) {
         if (!item.getType().name().contains("SHULKER"))
             throw new IllegalArgumentException("Material must be a shulker box");
 
         BlockStateMeta blockStateMeta = (BlockStateMeta) item.getItemMeta();
         ShulkerBox shulkerBox = (ShulkerBox) blockStateMeta.getBlockState();
 
-        ShulkerBuilder builder = new ShulkerBuilder(item.getType());
+        LegacyShulkerBuilder builder = new LegacyShulkerBuilder(item.getType());
         builder.amount = item.getAmount();
-        builder.name = item.getItemMeta().displayName();
-        builder.lore = item.getItemMeta().lore();
+        builder.name = item.getItemMeta().getDisplayName();
+        builder.lore = item.getItemMeta().getLore();
         builder.itemFlags = item.getItemFlags().toArray(new ItemFlag[0]);
 
         Inventory originalInventory = shulkerBox.getInventory();
@@ -54,40 +52,40 @@ public class ShulkerBuilder {
         return builder;
     }
 
-    public ShulkerBuilder setType(Material type) {
+    public LegacyShulkerBuilder setType(Material type) {
         if (!type.name().contains("SHULKER")) throw new IllegalArgumentException("Material must be a shulker box");
         this.material = type;
         return this;
     }
 
-    public ShulkerBuilder setAmount(int amount) {
+    public LegacyShulkerBuilder setAmount(int amount) {
         this.amount = amount;
         return this;
     }
 
-    public ShulkerBuilder setName(Component name) {
+    public LegacyShulkerBuilder setName(String name) {
         this.name = name;
         return this;
     }
 
-    public ShulkerBuilder setLore(Component... lore) {
+    public LegacyShulkerBuilder setLore(String... lore) {
         this.lore = Arrays.asList(lore);
         return this;
     }
 
-    public ShulkerBuilder setFlags(ItemFlag... flags) {
+    public LegacyShulkerBuilder setFlags(ItemFlag... flags) {
         this.itemFlags = flags;
         return this;
     }
 
-    public ShulkerBuilder minimal() {
+    public LegacyShulkerBuilder minimal() {
         setFlags(ItemFlag.values());
-        setName(CC.EMPTY);
-        setLore(CC.EMPTY);
+        setName("");
+        setLore("");
         return this;
     }
 
-    public ShulkerBuilder apply(Consumer<Inventory> consumer) {
+    public LegacyShulkerBuilder apply(Consumer<Inventory> consumer) {
         this.inventoryConsumer = consumer;
         return this;
     }
@@ -99,10 +97,10 @@ public class ShulkerBuilder {
         ShulkerBox shulkerBox = (ShulkerBox) blockStateMeta.getBlockState();
 
         if (name != null)
-            blockStateMeta.displayName(name);
+            blockStateMeta.setDisplayName(name);
 
         if (lore != null)
-            blockStateMeta.lore(lore);
+            blockStateMeta.setLore(lore);
 
         if (itemFlags != null)
             blockStateMeta.addItemFlags(itemFlags);
