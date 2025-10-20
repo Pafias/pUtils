@@ -4,12 +4,12 @@ import me.pafias.putils.BukkitPlayerManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class SkullBuilder {
@@ -19,6 +19,7 @@ public class SkullBuilder {
     private int amount = 1;
     private Component name;
     private List<Component> lore;
+    private Set<ItemFlag> itemflags;
 
     public SkullBuilder(@NotNull OfflinePlayer player) {
         if (player == null)
@@ -58,6 +59,22 @@ public class SkullBuilder {
         this.lore = Arrays.asList(Arrays.stream(lore)
                 .map(Component::text)
                 .toArray(Component[]::new));
+        return this;
+    }
+
+    public SkullBuilder setFlags(Collection<ItemFlag> itemFlags) {
+        this.itemflags = new HashSet<>(itemFlags);
+        return this;
+    }
+
+    public SkullBuilder setFlags(ItemFlag... flags) {
+        return setFlags(Arrays.asList(flags));
+    }
+
+    public SkullBuilder minimal() {
+        setFlags(ItemFlag.values());
+        setName(" ");
+        setLore(" ");
         return this;
     }
 

@@ -3,11 +3,11 @@ package me.pafias.putils.builders;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.SkullType;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class LegacySkullBuilder {
 
@@ -16,6 +16,7 @@ public class LegacySkullBuilder {
     private int amount = 1;
     private String name;
     private List<String> lore;
+    private Set<ItemFlag> itemflags;
 
     public LegacySkullBuilder(OfflinePlayer player) {
         skullType = SkullType.PLAYER;
@@ -46,6 +47,22 @@ public class LegacySkullBuilder {
 
     public LegacySkullBuilder setLore(String... lore) {
         this.lore = Arrays.asList(lore);
+        return this;
+    }
+
+    public LegacySkullBuilder setFlags(Collection<ItemFlag> itemFlags) {
+        this.itemflags = new HashSet<>(itemFlags);
+        return this;
+    }
+
+    public LegacySkullBuilder setFlags(ItemFlag... flags) {
+        return setFlags(Arrays.asList(flags));
+    }
+
+    public LegacySkullBuilder minimal() {
+        setFlags(ItemFlag.values());
+        setName(" ");
+        setLore(" ");
         return this;
     }
 
