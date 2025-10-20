@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
 
 public class ItemBuilder {
 
-    private final Material material;
-
+    private Material material;
     private int amount = 1;
 
     private short legacyData = -1;
@@ -48,11 +47,16 @@ public class ItemBuilder {
     }
 
     private ItemBuilder() {
-        this.material = Material.AIR;
+        setMaterial(Material.AIR);
     }
 
     public ItemBuilder(Material material) {
+        setMaterial(material);
+    }
+
+    public ItemBuilder setMaterial(Material material) {
         this.material = material;
+        return this;
     }
 
     public ItemBuilder setAmount(int amount) {

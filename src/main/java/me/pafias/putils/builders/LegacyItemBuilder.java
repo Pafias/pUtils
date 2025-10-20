@@ -12,7 +12,7 @@ import java.util.*;
 
 public class LegacyItemBuilder {
 
-    private final Material material;
+    private Material material;
     private int amount = 1;
     private short data = -1;
     private String name;
@@ -41,10 +41,19 @@ public class LegacyItemBuilder {
     }
 
     public LegacyItemBuilder(Material material) {
-        this.material = material;
+        setMaterial(material);
     }
 
     public LegacyItemBuilder(int materialId) {
+        setMaterial(materialId);
+    }
+
+    public LegacyItemBuilder setMaterial(Material material) {
+        this.material = material;
+        return this;
+    }
+
+    public LegacyItemBuilder setMaterial(int materialId) {
         try {
             Method getMaterialMethod = Material.class.getMethod("getMaterial", int.class);
             this.material = (Material) getMaterialMethod.invoke(null, materialId);
@@ -53,6 +62,7 @@ public class LegacyItemBuilder {
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new IllegalArgumentException("LegacyItemBuilder cannot be used in this minecraft version.", e);
         }
+        return this;
     }
 
     public LegacyItemBuilder setAmount(int amount) {
