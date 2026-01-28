@@ -1,6 +1,7 @@
 package me.pafias.putils.builders;
 
 import me.pafias.putils.BukkitPlayerManager;
+import me.pafias.putils.CC;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -9,7 +10,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class SkullBuilder {
@@ -19,7 +22,7 @@ public class SkullBuilder {
     private int amount = 1;
     private Component name;
     private List<Component> lore;
-    private Set<ItemFlag> itemflags;
+    private ItemFlag[] itemflags;
 
     public SkullBuilder(@NotNull OfflinePlayer player) {
         if (player == null)
@@ -45,36 +48,25 @@ public class SkullBuilder {
         return this;
     }
 
-    public SkullBuilder setName(String name) {
-        this.name = Component.text(name);
-        return this;
-    }
-
     public SkullBuilder setLore(Component... lore) {
         this.lore = Arrays.asList(lore);
         return this;
     }
 
-    public SkullBuilder setLore(String... lore) {
-        this.lore = Arrays.asList(Arrays.stream(lore)
-                .map(Component::text)
-                .toArray(Component[]::new));
-        return this;
-    }
-
     public SkullBuilder setFlags(Collection<ItemFlag> itemFlags) {
-        this.itemflags = new HashSet<>(itemFlags);
+        this.itemflags = itemFlags.toArray(new ItemFlag[0]);
         return this;
     }
 
     public SkullBuilder setFlags(ItemFlag... flags) {
-        return setFlags(Arrays.asList(flags));
+        this.itemflags = flags;
+        return this;
     }
 
     public SkullBuilder minimal() {
         setFlags(ItemFlag.values());
-        setName(" ");
-        setLore(" ");
+        setName(CC.EMPTY);
+        setLore(CC.EMPTY);
         return this;
     }
 

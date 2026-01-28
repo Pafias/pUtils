@@ -55,8 +55,11 @@ public class LegacyEnchantedBookBuilder {
             meta.setDisplayName(name);
         if (lore != null)
             meta.setLore(lore);
-        if (enchantments != null)
-            enchantments.forEach((enchantment, level) -> meta.addStoredEnchant(enchantment, level, true));
+        if (enchantments != null) {
+            for (final Map.Entry<Enchantment, Integer> enchantment : enchantments.entrySet()) {
+                meta.addEnchant(enchantment.getKey(), enchantment.getValue(), true);
+            }
+        }
         is.setItemMeta(meta);
         return is;
     }

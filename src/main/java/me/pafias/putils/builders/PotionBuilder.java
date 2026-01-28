@@ -6,6 +6,8 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 
+import java.util.Arrays;
+
 public class PotionBuilder {
 
     private final Material material;
@@ -14,7 +16,13 @@ public class PotionBuilder {
     private boolean upgraded;
 
     public PotionBuilder() {
-        material = Material.SPLASH_POTION;
+        this.material = Material.POTION;
+    }
+
+    public PotionBuilder(Material potionMaterial) {
+        if (!Arrays.asList(Material.POTION, Material.SPLASH_POTION, Material.LINGERING_POTION).contains(potionMaterial))
+            throw new IllegalArgumentException("Material must be a potion type.");
+        this.material = potionMaterial;
     }
 
     public PotionBuilder setEffect(PotionType effect, boolean extended, boolean upgraded) {

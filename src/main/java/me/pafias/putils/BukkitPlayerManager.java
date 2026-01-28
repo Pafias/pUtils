@@ -20,6 +20,17 @@ public class BukkitPlayerManager {
      * @return The corresponding OfflinePlayer object, or null if the player could not be found anywhere.
      */
     public static @Nullable OfflinePlayer getOfflinePlayerByName(String name) {
+        return getOfflinePlayerByName(name, true);
+    }
+
+    /**
+     * Gets an OfflinePlayer by their name
+     *
+     * @param name       The player's Minecraft username.
+     * @param preferNull If true, will return null for unknown players. If false, will try to return an OfflinePlayer object even if the player is unknown to this server.
+     * @return The corresponding OfflinePlayer object, or null if the player could not be found anywhere.
+     */
+    public static @Nullable OfflinePlayer getOfflinePlayerByName(String name, boolean preferNull) {
         if (name == null || name.isEmpty()) return null;
 
         // 1. Check for online player (fastest)
@@ -34,7 +45,7 @@ public class BukkitPlayerManager {
         if (mojangPlayer != null && mojangPlayer.getUniqueId() != null)
             // API success.
             // This also ensures the player is cached correctly for future lookups.
-            return getOfflinePlayerByUUID(mojangPlayer.getUniqueId());
+            return getOfflinePlayerByUUID(mojangPlayer.getUniqueId(), preferNull);
 
         // 4. All lookups failed.
         return null;
@@ -96,6 +107,16 @@ public class BukkitPlayerManager {
             return getOfflinePlayerByUUID(uuid);
         } catch (IllegalArgumentException e) {
             return getOfflinePlayerByName(input);
+        }
+    }
+
+    public static @Nullable OfflinePlayer getOfflinePlayerByInput(String input, boolean preferNull) {
+        if (input == null || input.isEmpty()) return null;
+        try {
+            UUID uuid = UUID.fromString(input);
+            return getOfflinePlayerByUUID(uuid, preferNull);
+        } catch (IllegalArgumentException e) {
+            return getOfflinePlayerByName(input, preferNull);
         }
     }
 

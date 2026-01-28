@@ -1,5 +1,6 @@
 package me.pafias.putils.builders;
 
+import me.pafias.putils.CC;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -31,20 +32,8 @@ public class EnchantedBookBuilder {
         return this;
     }
 
-    public EnchantedBookBuilder setName(String name) {
-        this.name = Component.text(name);
-        return this;
-    }
-
     public EnchantedBookBuilder setLore(Component... lore) {
         this.lore = Arrays.asList(lore);
-        return this;
-    }
-
-    public EnchantedBookBuilder setLore(String... lore) {
-        this.lore = Arrays.asList(Arrays.stream(lore)
-                .map(Component::text)
-                .toArray(Component[]::new));
         return this;
     }
 
@@ -56,8 +45,8 @@ public class EnchantedBookBuilder {
     }
 
     public EnchantedBookBuilder minimal() {
-        setName(" ");
-        setLore(" ");
+        setName(CC.EMPTY);
+        setLore(CC.EMPTY);
         return this;
     }
 
@@ -68,8 +57,11 @@ public class EnchantedBookBuilder {
             meta.displayName(name);
         if (lore != null)
             meta.lore(lore);
-        if (enchantments != null)
-            enchantments.forEach((enchantment, level) -> meta.addStoredEnchant(enchantment, level, true));
+        if (enchantments != null) {
+            for (final Map.Entry<Enchantment, Integer> enchantment : enchantments.entrySet()) {
+                meta.addEnchant(enchantment.getKey(), enchantment.getValue(), true);
+            }
+        }
         is.setItemMeta(meta);
         return is;
     }

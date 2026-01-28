@@ -7,7 +7,9 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class LegacySkullBuilder {
 
@@ -16,7 +18,7 @@ public class LegacySkullBuilder {
     private int amount = 1;
     private String name;
     private List<String> lore;
-    private Set<ItemFlag> itemflags;
+    private ItemFlag[] itemflags;
 
     public LegacySkullBuilder(OfflinePlayer player) {
         skullType = SkullType.PLAYER;
@@ -51,12 +53,13 @@ public class LegacySkullBuilder {
     }
 
     public LegacySkullBuilder setFlags(Collection<ItemFlag> itemFlags) {
-        this.itemflags = new HashSet<>(itemFlags);
+        this.itemflags = itemFlags.toArray(new ItemFlag[0]);
         return this;
     }
 
     public LegacySkullBuilder setFlags(ItemFlag... flags) {
-        return setFlags(Arrays.asList(flags));
+        this.itemflags = flags;
+        return this;
     }
 
     public LegacySkullBuilder minimal() {
@@ -75,6 +78,8 @@ public class LegacySkullBuilder {
             meta.setLore(lore);
         if (owner != null)
             meta.setOwner(owner);
+        if (itemflags != null)
+            meta.addItemFlags(itemflags);
         is.setItemMeta(meta);
         return is;
     }

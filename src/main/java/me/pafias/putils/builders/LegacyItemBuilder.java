@@ -21,16 +21,16 @@ public class LegacyItemBuilder {
     private ItemFlag[] itemflags;
 
     public static LegacyItemBuilder clone(ItemStack itemStack) {
-        LegacyItemBuilder builder = new LegacyItemBuilder(itemStack.getType());
+        final LegacyItemBuilder builder = new LegacyItemBuilder(itemStack.getType());
         builder.setAmount(itemStack.getAmount());
         builder.setData(itemStack.getDurability());
-        ItemMeta meta = itemStack.getItemMeta();
+        final ItemMeta meta = itemStack.getItemMeta();
         if (meta.hasDisplayName())
             builder.setName(meta.getDisplayName());
         if (meta.hasLore())
             builder.setLore(meta.getLore());
         if (meta.hasEnchants())
-            for (Map.Entry<Enchantment, Integer> entry : meta.getEnchants().entrySet())
+            for (final Map.Entry<Enchantment, Integer> entry : meta.getEnchants().entrySet())
                 builder.addEnchant(entry.getKey(), entry.getValue());
         builder.setFlags(meta.getItemFlags().toArray(new ItemFlag[0]));
         return builder;
@@ -55,7 +55,7 @@ public class LegacyItemBuilder {
 
     public LegacyItemBuilder setMaterial(int materialId) {
         try {
-            Method getMaterialMethod = Material.class.getMethod("getMaterial", int.class);
+            final Method getMaterialMethod = Material.class.getMethod("getMaterial", int.class);
             this.material = (Material) getMaterialMethod.invoke(null, materialId);
             if (this.material == null)
                 throw new IllegalArgumentException("Invalid material ID: " + materialId);
@@ -97,6 +97,11 @@ public class LegacyItemBuilder {
         return this;
     }
 
+    public LegacyItemBuilder setFlags(Collection<ItemFlag> itemFlags) {
+        itemflags = itemFlags.toArray(new ItemFlag[0]);
+        return this;
+    }
+
     public LegacyItemBuilder setFlags(ItemFlag... flags) {
         itemflags = flags;
         return this;
@@ -110,16 +115,16 @@ public class LegacyItemBuilder {
     }
 
     public ItemStack build() {
-        ItemStack is = new ItemStack(material, amount);
+        final ItemStack is = new ItemStack(material, amount);
         if (data != -1)
             is.setDurability(data);
-        ItemMeta meta = is.getItemMeta();
+        final ItemMeta meta = is.getItemMeta();
         if (name != null)
             meta.setDisplayName(name);
         if (lore != null)
             meta.setLore(lore);
         if (enchantments != null)
-            for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet())
+            for (final Map.Entry<Enchantment, Integer> entry : enchantments.entrySet())
                 meta.addEnchant(entry.getKey(), entry.getValue(), true);
         if (itemflags != null)
             meta.addItemFlags(itemflags);
