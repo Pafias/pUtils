@@ -80,7 +80,7 @@ public class SkullBuilder {
         if (owner != null)
             meta.setOwningPlayer(owner);
         else if (ownerName != null)
-            meta.setOwningPlayer(BukkitPlayerManager.getOfflinePlayerByName(ownerName));
+            meta.setOwningPlayer(BukkitPlayerManager.getOfflinePlayerByName(ownerName, false));
         is.setItemMeta(meta);
         return is;
     }
